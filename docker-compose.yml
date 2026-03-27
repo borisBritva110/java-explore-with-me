@@ -14,10 +14,9 @@ services:
       - stats-network
 
   stats-server:
-    build:
-      context: .
-      dockerfile: stats-server/stats-service-server/Dockerfile
-    container_name: stats-server
+    build: stats-server/stats-service-server
+    image: stats-service-image
+    container_name: stats-service
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
       SPRING_DATASOURCE_USERNAME: stats_user
