@@ -4,6 +4,7 @@ import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.service.model.EndpointHit;
 
 public class EndpointHitMapper {
+
     public static EndpointHit toEntity(EndpointHitDto dto) {
         EndpointHit entity = new EndpointHit();
         entity.setApp(dto.getApp());

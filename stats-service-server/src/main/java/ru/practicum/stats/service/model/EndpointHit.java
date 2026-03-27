@@ -27,7 +27,8 @@ public class EndpointHit {
     @JsonFormat(pattern = "yyyy-MM-dd 'T' HH:mm:ss")
     private LocalDateTime timestamp;
 
-    public EndpointHit() {}
+    public EndpointHit() {
+    }
 
     public EndpointHit(String app, String uri, String ip, LocalDateTime timestamp) {
         this.app = app;
