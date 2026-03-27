@@ -13,7 +13,7 @@ services:
     networks:
       - stats-network
 
-  stats-service:
+  stats-server:
     build:
       context: .
       dockerfile: stats-service-server/Dockerfile
