@@ -10,8 +10,6 @@ services:
       - stats-db-data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
-    networks:
-      - stats-network
 
   stats-server:
     build: stats-server/stats-service-server
@@ -26,8 +24,6 @@ services:
       - "9090:9090"
     depends_on:
       - stats-db
-    networks:
-      - stats-network
 
   ewm-service:
     build: ewm-service
