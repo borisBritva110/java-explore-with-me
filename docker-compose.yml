@@ -15,8 +15,8 @@ services:
 
   stats-server:
     build: stats-server/stats-service-server
-    image: stats-service-image
-    container_name: stats-service
+    image: stats-service-server-image
+    container_name: stats-service-server
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
       SPRING_DATASOURCE_USERNAME: stats_user
@@ -48,7 +48,8 @@ services:
     volumes:
       - /var/lib/postgresql/data/
     ports:
-      - "6542:5431"
+      - "6542:5431"stats-service
+
     environment:
       - POSTGRES_DB=ewm
       - POSTGRES_USER=ewm_user
