@@ -18,9 +18,8 @@
 	<packaging>pom</packaging>
 
 	<modules>
-		<module>stats-service-server</module>
-		<module>stats-service-client</module>
-		<module>stats-service-dto</module>
+		<module>stats-server</module>
+		<module>ewm-service</module>
 	</modules>
 
 	<properties>
