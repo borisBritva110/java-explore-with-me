@@ -48,8 +48,7 @@ services:
     volumes:
       - /var/lib/postgresql/data/
     ports:
-      - "6542:5431"stats-service
-
+      - "6542:5431"
     environment:
       - POSTGRES_DB=ewm
       - POSTGRES_USER=ewm_user
