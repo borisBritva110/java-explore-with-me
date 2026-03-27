@@ -1,3 +1,3 @@
-FROM openjdk:21-jdk
+FROM amazoncorretto:11-alpine-jdk
 COPY target/*.jar app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
