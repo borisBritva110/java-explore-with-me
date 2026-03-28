@@ -1,7 +1,10 @@
 package ru.practicum.stats.service.mapper;
 
+import java.time.Instant;
+
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.service.model.EndpointHit;
+import ru.practicum.stats.service.util.DateTime;
 
 public class EndpointHitMapper {
 

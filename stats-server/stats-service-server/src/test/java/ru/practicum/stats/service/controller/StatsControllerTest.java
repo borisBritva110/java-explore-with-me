@@ -31,7 +31,7 @@ class StatsControllerTest {
     @Test
     void testHit() throws Exception {
         EndpointHitDto hitDto = new EndpointHitDto();
-        hitDto.setApp("ewm-main-service");
+        hitDto.setApp(String.valueOf(1111));
         hitDto.setUri("/events/1");
         hitDto.setIp("192.168.1.1");
         hitDto.setTimestamp(LocalDateTime.now());
