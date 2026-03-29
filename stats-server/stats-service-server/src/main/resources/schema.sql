@@ -6,5 +6,5 @@ CREATE TABLE IF NOT EXISTS hits
     timestamp TIMESTAMP WITHOUT TIME ZONE
     );
 
-CREATE INDEX IF NOT EXISTS idx_endpoint_hit_timestamp ON endpoint_hits(timestamp);
-CREATE INDEX IF NOT EXISTS idx_endpoint_hit_uri ON endpoint_hits(uri);
+CREATE INDEX IF NOT EXISTS idx_endpoint_hit_timestamp ON hits(timestamp);
+CREATE INDEX IF NOT EXISTS idx_endpoint_hit_uri ON hits(uri);
