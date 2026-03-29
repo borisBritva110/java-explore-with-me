@@ -1,15 +1,10 @@
-CREATE TABLE IF NOT EXISTS apps
-(
-    id   BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    name VARCHAR(255)  NOT NULL,
-    uri  VARCHAR(2048) NOT NULL
-    );
-
 CREATE TABLE IF NOT EXISTS hits
 (
     id        BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    app_id    BIGINT      NOT NULL,
+    app       VARCHAR(255) NOT NULL,
     ip        VARCHAR(46) NOT NULL,
-    timestamp TIMESTAMP WITHOUT TIME ZONE,
-    CONSTRAINT fk_hits_to_apps FOREIGN KEY (app_id) REFERENCES apps (id) ON DELETE CASCADE
+    timestamp TIMESTAMP WITHOUT TIME ZONE
     )
+
+CREATE INDEX IF NOT EXISTS idx_endpoint_hit_timestamp ON endpoint_hits(timestamp);
+CREATE INDEX IF NOT EXISTS idx_endpoint_hit_uri ON endpoint_hits(uri);

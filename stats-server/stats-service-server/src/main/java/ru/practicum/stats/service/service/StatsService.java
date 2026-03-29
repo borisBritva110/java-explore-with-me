@@ -25,22 +25,14 @@ public class StatsService {
     }
 
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
-        if (unique) {
-            if (nonNull(uris)) {
-                List<ViewStatsDto> uniqueWithUrisStats = statsRepository.findUniqueWithUrisStats(uris, start, end);
-                return uniqueWithUrisStats;
-            } else {
-                return statsRepository.findUniqueAndNoUrisStats(start, end);
-            }
-
-        } else {
-            if (nonNull(uris)) {
-                List<ViewStatsDto> noUniqueWithUrisStats = statsRepository.findNoUniqueWithUrisStats(uris, start, end);
-                return noUniqueWithUrisStats;
-            } else {
-                return statsRepository.findNoUniqueAndNoUrisStats(start, end);
-            }
-
-        }
+        return switch (unique != null ? (unique ? 1 : 2) : 3) {
+            case 1 -> nonNull(uris)
+                ? statsRepository.findUniqueWithUrisStats(uris, start, end)
+                : statsRepository.findUniqueAndNoUrisStats(start, end);
+            case 2 -> nonNull(uris)
+                ? statsRepository.findNoUniqueWithUrisStats(uris, start, end)
+                : statsRepository.findNoUniqueAndNoUrisStats(start, end);
+            default -> throw new IllegalArgumentException("Unique parameter cannot be null");
+        };
     }
 }
