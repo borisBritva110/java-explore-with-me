@@ -40,7 +40,7 @@ public class ErrorHandler {
                 .map(error -> String.format("Field: %s. Error: %s. Value: %s",
                         error.getField(), error.getDefaultMessage(), error.getRejectedValue()))
                 .collect(Collectors.toList());
-        
+
         return ApiError.builder()
                 .errors(errors)
                 .message("Incorrectly made request.")

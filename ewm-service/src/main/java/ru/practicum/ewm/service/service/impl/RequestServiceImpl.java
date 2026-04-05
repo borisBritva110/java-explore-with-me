@@ -22,7 +22,6 @@ import ru.practicum.ewm.service.repository.ParticipationRequestRepository;
 import ru.practicum.ewm.service.repository.UserRepository;
 import ru.practicum.ewm.service.service.RequestService;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;

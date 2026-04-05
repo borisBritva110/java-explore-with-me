@@ -1,6 +1,5 @@
 package ru.practicum.ewm.service.service.impl;
 
-import java.awt.print.Pageable;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
