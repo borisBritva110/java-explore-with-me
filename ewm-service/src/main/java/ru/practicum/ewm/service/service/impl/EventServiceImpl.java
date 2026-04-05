@@ -199,12 +199,18 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    @Transactional
     public EventFullDto getEventByIdPublic(Long eventId) {
         log.info("Получаем событие id {}", eventId);
-        Event event = getEventOrThrow(
+        Event event = getEventOrThrow(eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
+
+        eventRepository.incrementViews(eventId);
+
+        event = getEventOrThrow(
             eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
-        Long views = getViewStatsForEvents(List.of(event))
-            .getOrDefault(eventId, EventMapper.NO_VIEWS);
+
+        Long views = event.getViews() != null ? event.getViews() : EventMapper.NO_VIEWS;
+
         log.info("(гость)Получили для объединения событие: {}\n и карту просмотров: {}", event, views);
         return EventMapper.toEventFullDto(event, views);
     }
@@ -342,26 +348,6 @@ public class EventServiceImpl implements EventService {
         }
         log.info("Получили карту просмотров: {}", viewsMap);
         return viewsMap;
-    }
-
-    private Map<Long, Long> getViewStatsForEventsWithIp(List<Event> events, String ip) {
-        log.info("Получаем просмотры для событий: {} с учетом IP {}", events, ip);
-        Map<Long, Long> viewsMap = getViewStatsForEvents(events);
-
-        if (ip != null && !ip.isEmpty()) {
-            for (Event event : events) {
-                if (event.getState() == EventState.PUBLISHED) {
-                    Long currentViews = viewsMap.getOrDefault(event.getId(), EventMapper.NO_VIEWS);
-                    viewsMap.put(event.getId(), currentViews + 1);
-                }
-            }
-        }
-
-        return viewsMap;
-    }
-
-    private boolean isUniqueIpForEvent(Long eventId, String ip) {
-        return ip != null && !ip.isEmpty();
     }
 
     @Override

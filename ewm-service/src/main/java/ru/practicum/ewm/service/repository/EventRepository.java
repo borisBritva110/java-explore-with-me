@@ -33,5 +33,9 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
         "WHERE e.id = :eventId")
     void updateConfirmedRequests(@Param("eventId") Long eventId);
 
+    @Modifying
+    @Query("UPDATE Event e SET e.views = e.views + 1 WHERE e.id = :eventId")
+    void incrementViews(@Param("eventId") Long eventId);
+
     Optional<Event> findByIdAndState(Long eventId, EventState state);
 }
