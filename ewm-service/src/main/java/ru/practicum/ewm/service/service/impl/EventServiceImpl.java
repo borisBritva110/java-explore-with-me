@@ -211,7 +211,7 @@ public class EventServiceImpl implements EventService {
 
         Long views = event.getViews() != null ? event.getViews() : EventMapper.NO_VIEWS;
 
-        log.info("(гость)Получили для объединения событие: {}\n и карту просмотров: {}", event, views);
+        log.info("Получили для объединения событие: {}\n и просмотры: {}", event, views);
         return EventMapper.toEventFullDto(event, views);
     }
 
