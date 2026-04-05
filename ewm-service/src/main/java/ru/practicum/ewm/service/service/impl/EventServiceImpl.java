@@ -199,6 +199,25 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
+    public EventFullDto getEventByIdPublic(Long eventId, String ip) {
+        log.info("Получаем событие id {} с учетом IP {}", eventId, ip);
+        Event event = getEventOrThrow(
+            eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
+
+        // Получаем статистику с учетом текущего IP
+        Map<Long, Long> viewsMap = getViewStatsForEventsWithIp(List.of(event), ip);
+        Long views = viewsMap.getOrDefault(eventId, EventMapper.NO_VIEWS);
+
+        // Если это уникальный IP, увеличиваем просмотры на 1
+        if (isUniqueIpForEvent(eventId, ip)) {
+            views = views + 1;
+        }
+
+        log.info("(гость)Получили для объединения событие: {}\n и карта просмотров: {}", event, views);
+        return EventMapper.toEventFullDto(event, views);
+    }
+
+    @Override
     public EventFullDto getEventByIdPublic(Long eventId) {
         log.info("Получаем событие id {}", eventId);
         Event event = getEventOrThrow(
@@ -342,6 +361,26 @@ public class EventServiceImpl implements EventService {
         }
         log.info("Получили карту просмотров: {}", viewsMap);
         return viewsMap;
+    }
+
+    private Map<Long, Long> getViewStatsForEventsWithIp(List<Event> events, String ip) {
+        log.info("Получаем просмотры для событий: {} с учетом IP {}", events, ip);
+        Map<Long, Long> viewsMap = getViewStatsForEvents(events);
+
+        if (ip != null && !ip.isEmpty()) {
+            for (Event event : events) {
+                if (event.getState() == EventState.PUBLISHED) {
+                    Long currentViews = viewsMap.getOrDefault(event.getId(), EventMapper.NO_VIEWS);
+                    viewsMap.put(event.getId(), currentViews + 1);
+                }
+            }
+        }
+
+        return viewsMap;
+    }
+
+    private boolean isUniqueIpForEvent(Long eventId, String ip) {
+        return ip != null && !ip.isEmpty();
     }
 
     @Override
