@@ -76,4 +76,24 @@ public class StatsClient {
             return Collections.emptyList();
         }
     }
+
+    public boolean isUniqueHit(String uri, String ip) {
+        log.info("Checking if hit is unique for URI: {}, IP: {}", uri, ip);
+        try {
+            String urlResult = url + "/hit/unique?uri=" + uri + "&ip=" + ip;
+            ResponseEntity<Boolean> response = restTemplate.getForEntity(
+                urlResult,
+                Boolean.class
+            );
+            Boolean result = response.getBody();
+            log.info("Hit is unique: {}", result);
+            return result != null ? result : false;
+        } catch (HttpStatusCodeException e) {
+            log.warn("HttpStatusCodeException method isUniqueHit {}", e.getMessage());
+            return false;
+        } catch (Exception e) {
+            log.warn("Exception method isUniqueHit {}", e.getMessage());
+            return false;
+        }
+    }
 }

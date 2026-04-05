@@ -40,4 +40,12 @@ public class StatsController {
         log.info("Returning {} stats records", result.size());
         return result;
     }
+
+    @GetMapping("/hit/unique")
+    public ResponseEntity<Boolean> isUniqueHit(@RequestParam String uri, @RequestParam String ip) {
+        log.info("Checking if hit is unique for URI: {}, IP: {}", uri, ip);
+        boolean isUnique = statsService.isUniqueHit(uri, ip);
+        log.info("Hit is unique: {}", isUnique);
+        return ResponseEntity.ok(isUnique);
+    }
 }

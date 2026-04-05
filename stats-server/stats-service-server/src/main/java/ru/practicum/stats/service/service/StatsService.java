@@ -45,4 +45,11 @@ public class StatsService {
 
         return result;
     }
+
+    public boolean isUniqueHit(String uri, String ip) {
+        log.info("Checking if hit is unique for URI: {}, IP: {}", uri, ip);
+        boolean isUnique = !statsRepository.existsByUriAndIp(uri, ip);
+        log.info("Hit is unique: {}", isUnique);
+        return isUnique;
+    }
 }

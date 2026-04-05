@@ -53,7 +53,7 @@ public class PublicEventController {
     @GetMapping("/{id}")
     public ResponseEntity<EventFullDto> getEventById(@PathVariable Long id, HttpServletRequest request) {
         log.info("Получение события с id={}", id);
-        EventFullDto event = eventService.getEventByIdPublic(id);
+        EventFullDto event = eventService.getEventByIdPublic(id, request.getRemoteAddr());
         saveHit(request);
         return ResponseEntity.ok(event);
     }

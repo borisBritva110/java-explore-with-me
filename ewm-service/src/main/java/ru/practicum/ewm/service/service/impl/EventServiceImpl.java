@@ -200,11 +200,16 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventFullDto getEventByIdPublic(Long eventId) {
+    public EventFullDto getEventByIdPublic(Long eventId, String ip) {
         log.info("Получаем событие id {}", eventId);
         Event event = getEventOrThrow(eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
 
-        eventRepository.incrementViews(eventId);
+        String uri = "/events/" + eventId;
+        boolean isUnique = statsClient.isUniqueHit(uri, ip);
+
+        if (isUnique) {
+            eventRepository.incrementViews(eventId);
+        }
 
         event = getEventOrThrow(
             eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);

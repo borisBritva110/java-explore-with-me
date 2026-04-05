@@ -20,7 +20,7 @@ public interface EventService {
                                         LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                         boolean onlyAvailable, EventSort sort, int from, int size);
 
-    EventFullDto getEventByIdPublic(Long eventId);
+    EventFullDto getEventByIdPublic(Long eventId, String ip);
 
     List<EventShortDto> getEventsPrivate(Long userId, int from, int size);
 
