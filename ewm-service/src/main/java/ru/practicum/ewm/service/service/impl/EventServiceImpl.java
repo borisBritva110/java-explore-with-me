@@ -199,25 +199,6 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getEventByIdPublic(Long eventId, String ip) {
-        log.info("Получаем событие id {} с учетом IP {}", eventId, ip);
-        Event event = getEventOrThrow(
-            eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
-
-        // Получаем статистику с учетом текущего IP
-        Map<Long, Long> viewsMap = getViewStatsForEventsWithIp(List.of(event), ip);
-        Long views = viewsMap.getOrDefault(eventId, EventMapper.NO_VIEWS);
-
-        // Если это уникальный IP, увеличиваем просмотры на 1
-        if (isUniqueIpForEvent(eventId, ip)) {
-            views = views + 1;
-        }
-
-        log.info("(гость)Получили для объединения событие: {}\n и карта просмотров: {}", event, views);
-        return EventMapper.toEventFullDto(event, views);
-    }
-
-    @Override
     public EventFullDto getEventByIdPublic(Long eventId) {
         log.info("Получаем событие id {}", eventId);
         Event event = getEventOrThrow(

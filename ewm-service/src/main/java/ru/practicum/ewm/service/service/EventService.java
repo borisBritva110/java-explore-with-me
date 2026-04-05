@@ -22,8 +22,6 @@ public interface EventService {
 
     EventFullDto getEventByIdPublic(Long eventId);
 
-    EventFullDto getEventByIdPublic(Long eventId, String ip);
-
     List<EventShortDto> getEventsPrivate(Long userId, int from, int size);
 
     EventFullDto addEventPrivate(Long userId, NewEventDto newEventDto);
