@@ -204,13 +204,6 @@ public class EventServiceImpl implements EventService {
         log.info("Получаем событие id {}", eventId);
         Event event = getEventOrThrow(eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
 
-        String uri = "/events/" + eventId;
-        boolean isUnique = statsClient.isUniqueHit(uri, ip);
-
-        if (isUnique) {
-            eventRepository.incrementViews(eventId);
-        }
-
         event = getEventOrThrow(
             eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
 

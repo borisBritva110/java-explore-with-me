@@ -9,9 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+
+import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -74,26 +77,6 @@ public class StatsClient {
         } catch (Exception e) {
             log.warn("Exception method getStats {}", e.getMessage());
             return Collections.emptyList();
-        }
-    }
-
-    public boolean isUniqueHit(String uri, String ip) {
-        log.info("Checking if hit is unique for URI: {}, IP: {}", uri, ip);
-        try {
-            String urlResult = url + "/hit/unique?uri=" + uri + "&ip=" + ip;
-            ResponseEntity<Boolean> response = restTemplate.getForEntity(
-                urlResult,
-                Boolean.class
-            );
-            Boolean result = response.getBody();
-            log.info("Hit is unique: {}", result);
-            return result != null ? result : false;
-        } catch (HttpStatusCodeException e) {
-            log.warn("HttpStatusCodeException method isUniqueHit {}", e.getMessage());
-            return false;
-        } catch (Exception e) {
-            log.warn("Exception method isUniqueHit {}", e.getMessage());
-            return false;
         }
     }
 }

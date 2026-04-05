@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import ru.practicum.ewm.service.ViewClient;
 import ru.practicum.ewm.service.model.EventSort;
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.ewm.service.dto.EventFullDto;
@@ -14,6 +15,7 @@ import ru.practicum.ewm.service.dto.EventShortDto;
 import ru.practicum.ewm.service.service.EventService;
 import ru.practicum.stats.client.StatsClient;
 
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -25,6 +27,7 @@ public class PublicEventController {
 
     private final EventService eventService;
     private final StatsClient statsClient;
+    private final ViewClient viewClient;
 
     @GetMapping
     public ResponseEntity<List<EventShortDto>> getEvents(
@@ -51,10 +54,12 @@ public class PublicEventController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<EventFullDto> getEventById(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<EventFullDto> getEventById(@PathVariable Long id, HttpServletRequest request) throws UnsupportedEncodingException {
         log.info("Получение события с id={}", id);
-        EventFullDto event = eventService.getEventByIdPublic(id, request.getRemoteAddr());
         saveHit(request);
+        Integer views = viewClient.getViews(request);
+        EventFullDto event = eventService.getEventByIdPublic(id, request.getRemoteAddr());
+        event.setViews(Long.valueOf(views));
         return ResponseEntity.ok(event);
     }
 
