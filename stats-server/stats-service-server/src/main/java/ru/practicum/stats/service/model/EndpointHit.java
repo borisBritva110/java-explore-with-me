@@ -1,40 +1,81 @@
 package ru.practicum.stats.service.model;
 
-import java.time.LocalDateTime;
-
-import jakarta.persistence.*;
-import lombok.Data;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-@Data
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 @Entity
 @Table(name = "hits")
 public class EndpointHit {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Integer id;
 
-    @Column(nullable = false)
+    @NotBlank(message = "Идентификатор сервиса не может быть пустым")
     private String app;
 
-    @Column(nullable = false)
+    @NotBlank(message = "URI не может быть пустым")
     private String uri;
 
-    @Column(nullable = false)
+    @NotBlank(message = "IP-адресс не может быт пустым")
     private String ip;
 
-    @Column(nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd 'T' HH:mm:ss")
+    @NotNull(message = "Временная отметка запроса к эндпоинту не может быть пустой")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
 
-    public EndpointHit() {
+    public Integer getId() {
+        return id;
     }
 
-    public EndpointHit(String app, String uri, String ip, LocalDateTime timestamp) {
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getApp() {
+        return app;
+    }
+
+    public void setApp(String app) {
         this.app = app;
+    }
+
+    public String getUri() {
+        return uri;
+    }
+
+    public void setUri(String uri) {
         this.uri = uri;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
         this.timestamp = timestamp;
     }
 }

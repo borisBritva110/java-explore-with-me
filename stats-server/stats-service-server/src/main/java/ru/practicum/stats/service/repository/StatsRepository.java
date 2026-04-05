@@ -52,4 +52,7 @@ public interface StatsRepository extends JpaRepository<EndpointHit, Long> {
                ORDER BY COUNT(eh.ip) DESC
             """)
     List<ViewStatsDto> findNoUniqueWithUrisStats(List<String> uris, LocalDateTime start, LocalDateTime end);
+
+    @Query("SELECT COUNT(eh) > 0 FROM EndpointHit eh WHERE eh.uri = :uri AND eh.ip = :ip")
+    boolean existsByUriAndIp(@Param("uri") String uri, @Param("ip") String ip);
 }
