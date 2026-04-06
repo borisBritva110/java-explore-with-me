@@ -17,11 +17,13 @@ import ru.practicum.ewm.service.model.EventSort;
 import ru.practicum.ewm.service.model.NotFound;
 import ru.practicum.ewm.service.model.User;
 import ru.practicum.ewm.service.repository.EventRepository;
+import ru.practicum.ewm.service.repository.ParticipationRequestRepository;
 import ru.practicum.ewm.service.service.CategoryService;
 import ru.practicum.ewm.service.service.EventService;
 import ru.practicum.ewm.service.service.UserService;
 import ru.practicum.ewm.service.specification.EventSpecification;
 import ru.practicum.stats.client.StatsClient;
+import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
 
 import java.time.LocalDateTime;
@@ -44,6 +46,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryService categoryService;
     private final StatsClient statsClient;
     private final ValidationServiceImpl validationService;
+    private final ParticipationRequestRepository participationRequestRepository;
 
     @Override
     public List<EventShortDto> getEventsPrivate(Long userId, int from, int size) {
@@ -85,7 +88,7 @@ public class EventServiceImpl implements EventService {
         Event newEvent = EventMapper.toEvent(newEventDto, user, category);
         newEvent = eventRepository.save(newEvent);
         log.info("Добавлено новое событие: {}", newEvent);
-        return EventMapper.toEventFullDto(newEvent, EventMapper.NO_VIEWS);
+        return buildFullDto(newEvent);
     }
 
     @Override
@@ -97,7 +100,7 @@ public class EventServiceImpl implements EventService {
         Long views = getViewStatsForEvents(List.of(event))
             .getOrDefault(eventId, EventMapper.NO_VIEWS);
         log.info("Получили для объединения событие: {}\n и карту просмотров: {}", event, views);
-        return EventMapper.toEventFullDto(event, views);
+        return buildFullDto(event);
     }
 
     @Override
@@ -139,11 +142,7 @@ public class EventServiceImpl implements EventService {
         }
 
         Event updatedEvent = eventRepository.save(event);
-        Long views = getViewStatsForEvents(List.of(updatedEvent))
-            .getOrDefault(eventId, EventMapper.NO_VIEWS);
-
-        log.info("Пользователем обновлено событие: {}", updatedEvent);
-        return EventMapper.toEventFullDto(updatedEvent, views);
+        return buildFullDto(updatedEvent);
     }
 
     @Override
@@ -202,15 +201,72 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventFullDto getEventByIdPublic(Long eventId, String ip) {
         log.info("Получаем событие id {}", eventId);
-        Event event = getEventOrThrow(eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
+        Event event = eventRepository.findById(eventId)
+            .filter(ev -> ev.getState() == EventState.PUBLISHED)
+            .orElseThrow(() -> new NotFoundException("Событие c id " + eventId + " не найдено"));
 
-        event = getEventOrThrow(
-            eventRepository.findByIdAndState(eventId, EventState.PUBLISHED), eventId);
+        saveHit("/events/" + eventId, ip);
+        return buildFullDto(event);
+    }
 
-        Long views = event.getViews() != null ? event.getViews() : EventMapper.NO_VIEWS;
+    private EventFullDto buildFullDto(Event event) {
+        Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event.getId()));
+        Map<Long, Long> views = getViewsForEvents(List.of(event.getId()));
 
-        log.info("Получили для объединения событие: {}\n и просмотры: {}", event, views);
-        return EventMapper.toEventFullDto(event, views);
+        return EventMapper.toEventFullDto(
+            event,
+            confirmedRequests.get(event.getId()),
+            views.getOrDefault(event.getId(), 0L)
+        );
+    }
+
+    private Map<Long, Long> getViewsForEvents(List<Long> eventIds) {
+        if (eventIds.isEmpty()) return Map.of();
+
+        List<String> uris = eventIds.stream()
+            .map(id -> "/events/" + id)
+            .toList();
+
+        Event event = eventRepository.findById(eventIds.get(0))
+            .orElseThrow(() -> new NotFoundException("Событие c id " + eventIds.get(0) + " не найдено"));
+
+        LocalDateTime start = event.getPublishedOn() != null ? event.getPublishedOn() : event.getCreatedOn();
+        LocalDateTime end = LocalDateTime.now();
+
+        List<ViewStatsDto> stats = statsClient.getStats(start, end, uris, true);
+
+        Map<Long, Long> views = eventIds.stream()
+            .collect(Collectors.toMap(id -> id, id -> 0L));
+
+        if (stats != null && !stats.isEmpty()) {
+            stats.forEach(stat -> {
+                Long eventId = getEventIdFromUri(stat.getUri());
+                if (eventId > -1L) {
+                    views.put(eventId, stat.getHits());
+                }
+            });
+        }
+        return views;
+    }
+
+    private Long getEventIdFromUri(String uri) {
+        try {
+            return Long.parseLong(uri.substring(uri.lastIndexOf('/') + 1));
+        } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+            return -1L;
+        }
+    }
+
+    private Map<Long, Long> getConfirmedRequests(List<Long> eventIds) {
+        if (eventIds.isEmpty()) return Map.of();
+
+        List<EventWithCountConfirmedRequests> events = participationRequestRepository.findCountConfirmedRequestsByEventIds(eventIds);
+        Map<Long, Long> confirmedRequests = eventIds.stream()
+            .collect(Collectors.toMap(id -> id, id -> 0L));
+
+        events.forEach(dto -> confirmedRequests.put(dto.eventId(), dto.countConfirmedRequests()));
+
+        return confirmedRequests;
     }
 
     @Override
@@ -232,11 +288,15 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findAll(spec, pageable).getContent();
 
         Map<Long, Long> viewsMap = getViewStatsForEvents(events);
+        Map<Long, Long> confirmedRequestsMap = getConfirmedRequests(events.stream()
+            .map(Event::getId)
+            .collect(Collectors.toList()));
         log.info("(админ) Получили для объединения события: {}\n и карту просмотров: {}", events, viewsMap);
         return events.stream()
             .map(event -> EventMapper.toEventFullDto(
-                event, viewsMap
-                    .getOrDefault(event.getId(),EventMapper.NO_VIEWS)))
+                event,
+                confirmedRequestsMap.getOrDefault(event.getId(), 0L),
+                viewsMap.getOrDefault(event.getId(), EventMapper.NO_VIEWS)))
             .collect(Collectors.toList());
     }
 
@@ -278,12 +338,7 @@ public class EventServiceImpl implements EventService {
         }
 
         Event updatedEvent = eventRepository.save(event);
-
-        Long views = getViewStatsForEvents(List.of(updatedEvent))
-            .getOrDefault(eventId, EventMapper.NO_VIEWS);
-
-        log.info("Админом обновлено событие: {}", updatedEvent);
-        return EventMapper.toEventFullDto(updatedEvent, views);
+        return buildFullDto(updatedEvent);
     }
 
     @Override
@@ -365,5 +420,14 @@ public class EventServiceImpl implements EventService {
         return eventOpt
             .orElseThrow(() -> new NotFoundException(
                 String.format(NotFound.EVENT, eventId)));
+    }
+
+    private void saveHit(String path, String ip) {
+        EndpointHitDto endpointHitDto = new EndpointHitDto();
+        endpointHitDto.setApp("ewm-service");
+        endpointHitDto.setIp(ip);
+        endpointHitDto.setUri(path);
+        endpointHitDto.setTimestamp(LocalDateTime.now());
+        statsClient.saveHit(endpointHitDto);
     }
 }

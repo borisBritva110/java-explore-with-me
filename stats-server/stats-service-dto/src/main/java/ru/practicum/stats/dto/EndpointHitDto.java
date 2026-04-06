@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 public class EndpointHitDto {
-    private Long id;
     @NotBlank
     private String app;
     @NotBlank
@@ -19,14 +18,6 @@ public class EndpointHitDto {
     @NotNull
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime timestamp;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
 
     public String getApp() {
         return app;

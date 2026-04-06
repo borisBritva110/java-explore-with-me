@@ -52,12 +52,12 @@ public final class EventMapper {
             .build();
     }
 
-    public static EventFullDto toEventFullDto(Event event, Long views) {
+    public static EventFullDto toEventFullDto(Event event, Long confirmedRequests, Long views) {
         return EventFullDto.builder()
             .id(event.getId())
             .annotation(event.getAnnotation())
             .category(CategoryMapper.toCategoryDto(event.getCategory()))
-            .confirmedRequests(event.getConfirmedRequests())
+            .confirmedRequests(confirmedRequests)
             .createdOn(event.getCreatedOn())
             .description(event.getDescription())
             .eventDate(event.getEventDate())

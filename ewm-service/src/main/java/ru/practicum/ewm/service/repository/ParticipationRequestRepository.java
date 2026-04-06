@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 
 import ru.practicum.ewm.service.dto.RequestStatus;
 import ru.practicum.ewm.service.model.ParticipationRequest;
+import ru.practicum.ewm.service.dto.EventWithCountConfirmedRequests;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,4 +35,10 @@ public interface ParticipationRequestRepository extends JpaRepository<Participat
     int rejectAllPendingRequestsByEventId(@Param("eventId") Long eventId);
 
     long countByEventIdAndStatus(Long eventId, RequestStatus status);
+
+    @Query("SELECT new ru.practicum.ewm.service.dto.EventWithCountConfirmedRequests(pr.event.id, COUNT(pr)) " +
+        "FROM ParticipationRequest pr " +
+        "WHERE pr.event.id IN :eventIds AND pr.status = 'CONFIRMED' " +
+        "GROUP BY pr.event.id")
+    List<EventWithCountConfirmedRequests> findCountConfirmedRequestsByEventIds(@Param("eventIds") List<Long> eventIds);
 }
