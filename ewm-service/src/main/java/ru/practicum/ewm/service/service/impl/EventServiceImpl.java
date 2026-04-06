@@ -205,16 +205,8 @@ public class EventServiceImpl implements EventService {
             .filter(ev -> ev.getState() == EventState.PUBLISHED)
             .orElseThrow(() -> new NotFoundException("Событие c id " + eventId + " не найдено"));
 
-        Map<Long, Long> currentViews = getViewsForEvents(List.of(event.getId()));
-        Long currentViewCount = currentViews.getOrDefault(event.getId(), 0L);
-
         saveHit("/events/" + eventId, ip);
-
-        return EventMapper.toEventFullDto(
-            event,
-            getConfirmedRequests(List.of(event.getId())).get(event.getId()),
-            currentViewCount + 1
-        );
+        return buildFullDto(event);
     }
 
     private EventFullDto buildFullDto(Event event) {
