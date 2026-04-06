@@ -206,7 +206,15 @@ public class EventServiceImpl implements EventService {
             .orElseThrow(() -> new NotFoundException("Событие c id " + eventId + " не найдено"));
 
         saveHit("/events/" + eventId, ip);
-        return buildFullDto(event);
+
+        Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event.getId()));
+        Map<Long, Long> views = getViewsForEvents(List.of(event.getId()));
+
+        return EventMapper.toEventFullDto(
+            event,
+            confirmedRequests.get(event.getId()),
+            views.getOrDefault(event.getId(), 0L)
+        );
     }
 
     private EventFullDto buildFullDto(Event event) {
