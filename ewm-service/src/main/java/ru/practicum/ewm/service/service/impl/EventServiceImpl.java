@@ -34,6 +34,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import jakarta.validation.ValidationException;
 
 @Slf4j
@@ -209,6 +212,8 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event.getId()));
         Map<Long, Long> views = getViewsForEvents(List.of(event.getId()));
+
+        log.info("Confirmed requests: {}, Views: {}", confirmedRequests.get(event.getId()), views.getOrDefault(event.getId(), 0L));
 
         return EventMapper.toEventFullDto(
             event,
