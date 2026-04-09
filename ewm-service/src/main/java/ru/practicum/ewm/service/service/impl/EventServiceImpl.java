@@ -35,8 +35,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-
 import jakarta.validation.ValidationException;
 
 @Slf4j
