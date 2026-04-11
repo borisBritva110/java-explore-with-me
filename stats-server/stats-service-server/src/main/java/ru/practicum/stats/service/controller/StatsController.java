@@ -36,14 +36,15 @@ public class StatsController {
                                        @RequestParam(required = false) List<String> uris,
                                        @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("Received stats request - start: {}, end: {}, uris: {}, unique: {}", start, end, uris, unique);
-        try {
-            List<ViewStatsDto> result = statsService.getStats(start, end, uris, unique);
-            log.info("Returning {} stats records", result.size());
-            return ResponseEntity.ok(result);
-        } catch (IllegalArgumentException e) {
-            log.warn("Validation error in getStats: {}", e.getMessage());
+
+        if (start.isAfter(end)) {
+            log.warn("Валидация не пройдена: start {} is after end {}", start, end);
             return ResponseEntity.badRequest().build();
         }
+
+        List<ViewStatsDto> result = statsService.getStats(start, end, uris, unique);
+        log.info("Returning {} stats records", result.size());
+        return ResponseEntity.ok(result);
     }
 
     @GetMapping("/hit/unique")
