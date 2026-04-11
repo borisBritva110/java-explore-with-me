@@ -31,14 +31,19 @@ public class StatsController {
     }
 
     @GetMapping("/stats")
-    public List<ViewStatsDto> getStats(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+    public ResponseEntity<List<ViewStatsDto>> getStats(@RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
                                        @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                        @RequestParam(required = false) List<String> uris,
                                        @RequestParam(defaultValue = "false") Boolean unique) {
         log.info("Received stats request - start: {}, end: {}, uris: {}, unique: {}", start, end, uris, unique);
-        List<ViewStatsDto> result = statsService.getStats(start, end, uris, unique);
-        log.info("Returning {} stats records", result.size());
-        return result;
+        try {
+            List<ViewStatsDto> result = statsService.getStats(start, end, uris, unique);
+            log.info("Returning {} stats records", result.size());
+            return ResponseEntity.ok(result);
+        } catch (IllegalArgumentException e) {
+            log.warn("Validation error in getStats: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @GetMapping("/hit/unique")

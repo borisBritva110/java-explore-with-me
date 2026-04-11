@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
+import ru.practicum.stats.service.exception.InvalidTimeRangeException;
 import ru.practicum.stats.service.mapper.EndpointHitMapper;
 import ru.practicum.stats.service.model.EndpointHit;
 import ru.practicum.stats.service.repository.StatsRepository;
@@ -31,7 +32,7 @@ public class StatsService {
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         log.info("Getting stats - start: {}, end: {}, uris: {}, unique: {}", start, end, uris, unique);
         if (start.isAfter(end)) {
-            throw new IllegalArgumentException("Дата начала диапазона не может быть позже даты конца");
+            throw new InvalidTimeRangeException("Дата начала диапазона не может быть позже даты конца");
         }
 
         List<ViewStatsDto> result = switch (unique != null ? (unique ? 1 : 2) : 3) {
