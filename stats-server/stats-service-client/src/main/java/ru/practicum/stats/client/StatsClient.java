@@ -22,8 +22,7 @@ import java.util.List;
 public class StatsClient {
     private static final Logger log = LoggerFactory.getLogger(StatsClient.class);
 
-    @Value("${stats.service.url:http://localhost:9090}")
-    private String url;
+    @Value("${stats-server.url:http://stats-server:9090}")    private String url;
     private final RestTemplate restTemplate;
     private final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
