@@ -30,6 +30,10 @@ public class StatsService {
 
     public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, Boolean unique) {
         log.info("Getting stats - start: {}, end: {}, uris: {}, unique: {}", start, end, uris, unique);
+        if (start.isAfter(end)) {
+            throw new IllegalArgumentException("Дата начала диапазона не может быть позже даты конца");
+        }
+
         List<ViewStatsDto> result = switch (unique != null ? (unique ? 1 : 2) : 3) {
             case 1 -> nonNull(uris)
                 ? statsRepository.findUniqueWithUrisStats(uris, start, end)
