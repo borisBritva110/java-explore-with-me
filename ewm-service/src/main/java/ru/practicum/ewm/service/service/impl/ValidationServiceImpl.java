@@ -63,7 +63,6 @@ public class ValidationServiceImpl implements ValidationService {
 
     @Override
     public void validateParticipationRequest(Long userId, Event event) {
-        // уже есть заявка
         if (requestRepository.existsByEventIdAndRequesterId(event.getId(), userId)) {
             throw new ConflictException("Request already exists");
         }

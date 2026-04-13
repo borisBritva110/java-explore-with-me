@@ -38,7 +38,7 @@ public class ParticipationRequest {
 
     @PrePersist
     protected void onCreate() {
-        created = LocalDateTime.now().withNano(0); // Обрезаем наносекунды для соответствия тестам
+        created = LocalDateTime.now().withNano(0);
         if (status == null) {
             status = RequestStatus.PENDING;
         }
