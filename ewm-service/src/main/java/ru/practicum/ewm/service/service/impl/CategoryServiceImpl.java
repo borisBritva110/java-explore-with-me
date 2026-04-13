@@ -12,10 +12,12 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.service.dto.CategoryDto;
 import ru.practicum.ewm.service.dto.NewCategoryDto;
 import ru.practicum.ewm.service.exception.NotFoundException;
+import ru.practicum.ewm.service.exception.ConflictException;
 import ru.practicum.ewm.service.mapper.CategoryMapper;
 import ru.practicum.ewm.service.model.Category;
 import ru.practicum.stats.dto.NotFound;
 import ru.practicum.ewm.service.repository.CategoryRepository;
+import ru.practicum.ewm.service.repository.EventRepository;
 import ru.practicum.ewm.service.service.CategoryService;
 
 import java.util.List;
@@ -27,12 +29,16 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
-    private final ValidationServiceImpl validationService;
+    private final EventRepository eventRepository;
 
     @Override
     @Transactional
     public CategoryDto addCategory(NewCategoryDto newCategoryDto) {
         log.info("Добавляем новую категорию: {}", newCategoryDto);
+        if (categoryRepository.existsByName(newCategoryDto.getName())) {
+            throw new ConflictException("Category with name=" + newCategoryDto.getName() + " already exists");
+        }
+
         Category newCategory = categoryRepository.save(CategoryMapper.toCategory(newCategoryDto));
         log.info("Новая категория добавлена: {}", newCategory);
         return CategoryMapper.toCategoryDto(newCategory);
@@ -43,6 +49,11 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto updateCategory(Long catId, CategoryDto categoryDto) {
         log.info("Обновляем категорию id {}: {}", catId, categoryDto);
         Category category = getCategoryOrThrow(catId);
+
+        if (categoryRepository.existsByNameAndIdNot(categoryDto.getName(), catId)) {
+            throw new ConflictException("Имя категории уже занято");
+        }
+
         log.info("old name: {}", category.getName());
         category.setName(categoryDto.getName());
         Category updatedCategory = categoryRepository.save(category);
@@ -54,6 +65,11 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void deleteCategory(Long catId) {
         log.info("Удаляем категорию id {}", catId);
+
+        if (eventRepository.existsByCategoryId(catId)) {
+            throw new ConflictException("Невозможно удалить категорию с данным id");
+        }
+
         categoryRepository.deleteById(catId);
         log.info("Категория id {} удалена", catId);
     }

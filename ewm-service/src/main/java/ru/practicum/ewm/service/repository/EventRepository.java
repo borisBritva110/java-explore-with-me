@@ -17,6 +17,8 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
 
     boolean existsByIdAndInitiatorId(Long eventId, Long userId);
 
+    boolean existsByCategoryId(Long categoryId);
+
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Event e WHERE e.id = :eventId")
     Optional<Event> findByIdWithLock(@Param("eventId") Long eventId);

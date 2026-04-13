@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.service.dto.NewUserRequest;
 import ru.practicum.ewm.service.dto.UserDto;
 import ru.practicum.ewm.service.exception.NotFoundException;
+import ru.practicum.ewm.service.exception.ConflictException;
 import ru.practicum.ewm.service.mapper.UserMapper;
 import ru.practicum.stats.dto.NotFound;
 import ru.practicum.ewm.service.model.User;
@@ -55,6 +56,11 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserDto addUser(NewUserRequest newUserRequest) {
         log.info("Добавляем нового пользователя: {}", newUserRequest);
+
+        if (userRepository.existsByEmail(newUserRequest.getEmail())) {
+            throw new ConflictException("Пользователь с данной почтой уже существует");
+        }
+
         User newUser = userRepository.save(UserMapper.toEntity(newUserRequest));
         log.info("Новый пользователь добавлен: {}", newUser);
         return UserMapper.toDto(newUser);

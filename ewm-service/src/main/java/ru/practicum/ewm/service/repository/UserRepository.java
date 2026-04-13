@@ -12,4 +12,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.id IN :ids")
     Page<User> findAllByIds(@Param("ids") List<Long> ids, Pageable pageable);
 
+    boolean existsByEmail(String email);
 }

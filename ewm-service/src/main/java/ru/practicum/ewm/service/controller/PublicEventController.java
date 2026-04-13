@@ -13,6 +13,7 @@ import ru.practicum.ewm.service.dto.EventFullDto;
 import ru.practicum.ewm.service.dto.EventShortDto;
 import ru.practicum.ewm.service.service.EventService;
 import ru.practicum.stats.client.StatsClient;
+import ru.practicum.ewm.service.exception.BadRequestException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,6 +42,10 @@ public class PublicEventController {
 
         log.info("Получение событий с фильтрами: text={}, categories={}, paid={}, rangeStart={}, rangeEnd={}, onlyAvailable={}, sort={}, from={}, size={}",
                 text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
+
+        if (rangeStart != null && rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
+            throw new BadRequestException("Переданы невалидные даты");
+        }
 
         List<EventShortDto> events = eventService.getEventsPublic(text, categories, paid, rangeStart, rangeEnd,
                 onlyAvailable, sort, from, size);

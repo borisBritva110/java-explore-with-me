@@ -11,11 +11,13 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import ru.practicum.ewm.service.dto.CompilationDto;
 import ru.practicum.ewm.service.dto.NewCompilationDto;
 import ru.practicum.ewm.service.dto.UpdateCompilationRequest;
+import ru.practicum.ewm.service.exception.BadRequestException;
 import ru.practicum.ewm.service.exception.NotFoundException;
 import ru.practicum.ewm.service.mapper.CompilationMapper;
 import ru.practicum.ewm.service.model.Compilation;
@@ -68,11 +70,27 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     @Transactional
-    public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
+    public CompilationDto addCompilation(@Valid NewCompilationDto newCompilationDto) {
         log.info("Добавляем подборку: {}", newCompilationDto);
+
+        if (newCompilationDto.getTitle() == null || newCompilationDto.getTitle().trim().isEmpty()) {
+            throw new BadRequestException("Значение для заголовка не может быть пустым");
+        }
+
+        if (newCompilationDto.getTitle().length() > 50) {
+            throw new BadRequestException("Длина должна быть от 1 до 50 символов");
+        }
+
         Set<Long> newEvents = newCompilationDto.getEvents();
         Set<Event> events = new HashSet<>();
         if (newEvents != null && !newEvents.isEmpty()) {
+            for (Long eventId : newEvents) {
+                try {
+                    eventService.getEventByIdWithLock(eventId);
+                } catch (NotFoundException e) {
+                    throw new NotFoundException("Event with id=" + eventId + " was not found");
+                }
+            }
             events = new HashSet<>(eventService.getAllEventById(newEvents));
         }
 
@@ -103,6 +121,14 @@ public class CompilationServiceImpl implements CompilationService {
             compilationRepository.findById(compId), compId);
 
         if (updateRequest.hasTitle()) {
+            if (updateRequest.getTitle() == null || updateRequest.getTitle().trim().isEmpty()) {
+                throw new BadRequestException("Field: title. Error: must not be blank. Value: null");
+            }
+
+            if (updateRequest.getTitle().length() > 50) {
+                throw new BadRequestException("Field: title. Error: длина должна быть от 1 до 50 символов. Value: " + updateRequest.getTitle());
+            }
+
             compilation.setTitle(updateRequest.getTitle());
         }
 

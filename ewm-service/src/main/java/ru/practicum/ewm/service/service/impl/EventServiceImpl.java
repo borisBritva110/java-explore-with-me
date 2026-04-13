@@ -201,14 +201,14 @@ public class EventServiceImpl implements EventService {
 
         Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event.getId()));
         Map<Long, Long> views = getViewsForEvents(event.getId());
-        views.put(eventId, views.getOrDefault(eventId, 0L) + 1);
 
-        log.info("Confirmed requests: {}, Views: {}", confirmedRequests.get(event.getId()), views.getOrDefault(event.getId(), 0L));
+        Long currentViews = views.getOrDefault(eventId, 0L) + 1;
+        views.put(eventId, currentViews);
 
         return EventMapper.toEventFullDto(
             event,
             confirmedRequests.get(event.getId()),
-            views.getOrDefault(event.getId(), 0L)
+            currentViews
         );
     }
 
