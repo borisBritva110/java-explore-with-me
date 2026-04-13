@@ -20,7 +20,7 @@ import java.util.List;
 @Slf4j
 @Component
 public class StatsClient {
-    @Value("${stats-server.url:https://stats-server:9090}")
+    @Value("${stats-server.url:http://stats-server:9090}")
     private String url;
     private final RestTemplate restTemplate;
     private final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
