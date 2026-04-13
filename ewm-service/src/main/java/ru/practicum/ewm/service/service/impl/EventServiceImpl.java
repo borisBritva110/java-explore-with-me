@@ -192,10 +192,15 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto getEventByIdPublic(Long eventId, String ip) {
-        log.info("Получаем событие id {}", eventId);
         Event event = eventRepository.findById(eventId)
-            .filter(ev -> ev.getState() == EventState.PUBLISHED)
-            .orElseThrow(() -> new NotFoundException("Событие c id " + eventId + " не найдено"));
+            .orElseThrow(() -> {
+                log.warn("Событие с id {} не найдено", eventId);
+                return new NotFoundException("Событие c id " + eventId + " не найдено");
+            });
+
+        if (event.getState() != EventState.PUBLISHED) {
+            throw new NotFoundException("Событие c id " + eventId + " не найдено");
+        }
 
         saveHit("/events/" + eventId, ip);
 
