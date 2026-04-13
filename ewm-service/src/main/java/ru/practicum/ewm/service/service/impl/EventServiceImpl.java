@@ -205,7 +205,7 @@ public class EventServiceImpl implements EventService {
         saveHit("/events/" + eventId, ip);
 
         Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event.getId()));
-        Map<Long, Long> views = getViewsForEvents(event.getId());
+        Map<Long, Long> views = new HashMap<>(getViewsForEvents(event.getId()));
 
         Long currentViews = views.getOrDefault(eventId, 0L) + 1;
         views.put(eventId, currentViews);
