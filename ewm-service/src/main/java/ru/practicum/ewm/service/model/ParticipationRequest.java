@@ -10,10 +10,11 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "participation_requests")
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class ParticipationRequest {
 
     @Id

@@ -51,16 +51,8 @@ public class UpdateEventAdminRequest {
         return annotation != null;
     }
 
-    public boolean hasCategory() {
-        return category != null;
-    }
-
     public boolean hasDescription() {
         return description != null;
-    }
-
-    public boolean hasEventDate() {
-        return eventDate != null;
     }
 
     public boolean hasLocation() {
@@ -77,10 +69,6 @@ public class UpdateEventAdminRequest {
 
     public boolean hasRequestModeration() {
         return requestModeration != null;
-    }
-
-    public boolean hasStateAction() {
-        return stateAction != null;
     }
 
     public boolean hasTitle() {

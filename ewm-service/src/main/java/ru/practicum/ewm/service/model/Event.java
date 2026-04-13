@@ -15,15 +15,15 @@ import jakarta.persistence.Table;
 import lombok.*;
 import ru.practicum.ewm.service.dto.EventState;
 
-import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "events")
-@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class Event {
 
     @Id

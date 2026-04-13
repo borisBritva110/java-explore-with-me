@@ -46,9 +46,17 @@ public class EventSpecification {
     }
 
     public static Specification<Event> eventDateBetween(LocalDateTime start, LocalDateTime end) {
+        return eventDateBetween(start, end, true);
+    }
+
+    public static Specification<Event> eventDateBetweenAdmin(LocalDateTime start, LocalDateTime end) {
+        return eventDateBetween(start, end, false);
+    }
+
+    private static Specification<Event> eventDateBetween(LocalDateTime start, LocalDateTime end, boolean onlyFuture) {
         return (root, query, cb) -> {
             if (start == null && end == null) {
-                return cb.greaterThan(root.get("eventDate"), LocalDateTime.now());
+                return onlyFuture ? cb.greaterThan(root.get("eventDate"), LocalDateTime.now()) : cb.conjunction();
             }
 
             List<Predicate> predicates = new ArrayList<>();
@@ -60,10 +68,6 @@ public class EventSpecification {
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
-    }
-
-    public static Specification<Event> eventDateInFuture() {
-        return (root, query, cb) -> cb.greaterThan(root.get("eventDate"), LocalDateTime.now());
     }
 
     public static Specification<Event> initiatorIdsIn(List<Long> userIds) {
@@ -81,23 +85,6 @@ public class EventSpecification {
                 return cb.conjunction();
             }
             return root.get("state").in(states);
-        };
-    }
-
-    public static Specification<Event> eventDateBetweenAdmin(LocalDateTime start, LocalDateTime end) {
-        return (root, query, cb) -> {
-            if (start == null && end == null) {
-                return cb.conjunction();
-            }
-
-            List<Predicate> predicates = new ArrayList<>();
-            if (start != null) {
-                predicates.add(cb.greaterThanOrEqualTo(root.get("eventDate"), start));
-            }
-            if (end != null) {
-                predicates.add(cb.lessThanOrEqualTo(root.get("eventDate"), end));
-            }
-            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 }

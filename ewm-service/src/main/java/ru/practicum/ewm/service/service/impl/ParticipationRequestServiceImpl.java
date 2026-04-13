@@ -11,7 +11,7 @@ import ru.practicum.ewm.service.exception.ConflictException;
 import ru.practicum.ewm.service.exception.NotFoundException;
 import ru.practicum.ewm.service.mapper.RequestMapper;
 import ru.practicum.ewm.service.model.Event;
-import ru.practicum.ewm.service.model.NotFound;
+import ru.practicum.stats.dto.NotFound;
 import ru.practicum.ewm.service.model.ParticipationRequest;
 import ru.practicum.ewm.service.dto.RequestStatus;
 import ru.practicum.ewm.service.repository.ParticipationRequestRepository;
@@ -39,9 +39,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Override
     public List<ParticipationRequestDto> getUserRequests(Long userId) {
         log.info("Получаем запросы пользователя id {}", userId);
-
-        validationService.checkUserExists(userId);
-
         List<ParticipationRequest> requests = requestRepository.findAllByRequesterId(userId);
 
         return requests.stream()
@@ -86,14 +83,10 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional
     public ParticipationRequestDto cancelRequest(Long userId, Long requestId) {
         log.info("Отменяем заявку id {} пользователя id {}", requestId, userId);
-
-        validationService.checkUserExists(userId);
-
         ParticipationRequest request = getRequestOrThrow(
             requestRepository.findByIdAndRequesterId(requestId, userId),requestId);
 
         RequestStatus requestStatus = request.getStatus();
-        validationService.validateRequestCanBeReject(requestStatus);
         request.setStatus(RequestStatus.CANCELED);
         request = requestRepository.save(request);
 
@@ -108,10 +101,6 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Override
     public List<ParticipationRequestDto> getEventRequests(Long userId, Long eventId) {
         log.info("Получаем заявки для события id {} пользователя id {}", eventId, userId);
-
-        validationService.checkUserExists(userId);
-        validationService.validateEventExistsAndInitiator(eventId, userId);
-
         List<ParticipationRequest> requests = requestRepository.findAllByEventId(eventId);
 
         return requests.stream()
@@ -123,11 +112,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional
     public EventRequestStatusUpdateResult changeRequestStatus(
         Long userId, Long eventId, EventRequestStatusUpdateRequest statusUpdateRequest) {
-
-        validationService.checkUserExists(userId);
         Event event = eventService.getEventByIdWithLock(eventId);
 
-        if (event.getInitiator().getId().equals(userId) == false) {
+        if (!event.getInitiator().getId().equals(userId)) {
             throw new NotFoundException("User is not initiator");
         }
 
@@ -140,20 +127,20 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
             statusUpdateRequest.getRequestIds());
 
         List<Long> wrongRequestIds = requests.stream()
-            .filter(r -> r.getEvent().getId().equals(eventId) == false)
+            .filter(r -> !r.getEvent().getId().equals(eventId))
             .map(ParticipationRequest::getId)
-            .collect(Collectors.toList());
+            .toList();
 
-        if (wrongRequestIds.isEmpty() == false) {
+        if (!wrongRequestIds.isEmpty()) {
             throw new ConflictException("Requests - " + wrongRequestIds + " - not belong to this event");
         }
 
         List<Long> notPendingIds = requests.stream()
             .filter(r -> r.getStatus() != RequestStatus.PENDING)
             .map(ParticipationRequest::getId)
-            .collect(Collectors.toList());
+            .toList();
 
-        if (notPendingIds.isEmpty() == false) {
+        if (!notPendingIds.isEmpty()) {
             throw new ConflictException("Requests - " + notPendingIds + " - have not status PENDING");
         }
 

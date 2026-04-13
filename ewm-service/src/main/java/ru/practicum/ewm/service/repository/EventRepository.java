@@ -6,16 +6,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
-import ru.practicum.ewm.service.dto.EventState;
 import ru.practicum.ewm.service.model.Event;
 
 import java.util.Optional;
 
 public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecificationExecutor<Event> {
-
-    @Query("SELECT COUNT(e) > 0 FROM Event e WHERE e.category.id = :categoryId")
-    boolean existsEventsByCategoryId(@Param("categoryId") Long categoryId);
-
     Page<Event> findAllByInitiatorId(Long userId, Pageable pageable);
 
     Optional<Event> findByIdAndInitiatorId(Long eventId, Long userId);
@@ -32,10 +27,4 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
         "WHERE pr.event.id = e.id AND pr.status = 'CONFIRMED') " +
         "WHERE e.id = :eventId")
     void updateConfirmedRequests(@Param("eventId") Long eventId);
-
-    @Modifying
-    @Query("UPDATE Event e SET e.views = COALESCE(e.views, 0) + 1 WHERE e.id = :eventId")
-    void incrementViews(@Param("eventId") Long eventId);
-
-    Optional<Event> findByIdAndState(Long eventId, EventState state);
 }

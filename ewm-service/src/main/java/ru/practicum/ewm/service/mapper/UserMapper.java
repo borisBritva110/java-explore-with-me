@@ -1,10 +1,13 @@
 package ru.practicum.ewm.service.mapper;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import ru.practicum.ewm.service.dto.NewUserRequest;
 import ru.practicum.ewm.service.dto.UserDto;
 import ru.practicum.ewm.service.dto.UserShortDto;
 import ru.practicum.ewm.service.model.User;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class UserMapper {
 
     public static User toEntity(NewUserRequest dto) {

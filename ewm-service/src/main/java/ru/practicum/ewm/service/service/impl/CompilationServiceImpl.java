@@ -20,11 +20,10 @@ import ru.practicum.ewm.service.exception.NotFoundException;
 import ru.practicum.ewm.service.mapper.CompilationMapper;
 import ru.practicum.ewm.service.model.Compilation;
 import ru.practicum.ewm.service.model.Event;
-import ru.practicum.ewm.service.model.NotFound;
+import ru.practicum.stats.dto.NotFound;
 import ru.practicum.ewm.service.repository.CompilationRepository;
 import ru.practicum.ewm.service.service.CompilationService;
 import ru.practicum.ewm.service.service.EventService;
-import ru.practicum.ewm.service.service.ValidationService;
 
 @Slf4j
 @Service
@@ -33,7 +32,6 @@ import ru.practicum.ewm.service.service.ValidationService;
 public class CompilationServiceImpl implements CompilationService {
     private final CompilationRepository compilationRepository;
     private final EventService eventService;
-    private final ValidationService validationService;
 
     @Override
     public List<CompilationDto> getCompilations(Boolean pinned, int from, int size) {
@@ -72,14 +70,10 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
         log.info("Добавляем подборку: {}", newCompilationDto);
-
-        validationService.checkCompilationTitleUse(newCompilationDto.getTitle());
-
         Set<Long> newEvents = newCompilationDto.getEvents();
         Set<Event> events = new HashSet<>();
-        if (newEvents != null && newEvents.isEmpty() == false) {
-            events = new HashSet<>(
-                eventService.getAllEventById(newEvents));
+        if (newEvents != null && !newEvents.isEmpty()) {
+            events = new HashSet<>(eventService.getAllEventById(newEvents));
         }
 
         Compilation compilation = CompilationMapper.toCompilation(newCompilationDto, events);
@@ -96,7 +90,6 @@ public class CompilationServiceImpl implements CompilationService {
     @Transactional
     public void deleteCompilation(Long compId) {
         log.info("Удаление подборки id: {}", compId);
-        validationService.checkCompilationExists(compId);
         compilationRepository.deleteById(compId);
         log.info("Удалена подборка id: {}", compId);
     }
@@ -110,7 +103,6 @@ public class CompilationServiceImpl implements CompilationService {
             compilationRepository.findById(compId), compId);
 
         if (updateRequest.hasTitle()) {
-            validationService.checkCompilationTitleUse(updateRequest.getTitle());
             compilation.setTitle(updateRequest.getTitle());
         }
 

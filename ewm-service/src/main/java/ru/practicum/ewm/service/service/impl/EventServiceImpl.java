@@ -14,7 +14,7 @@ import ru.practicum.ewm.service.mapper.EventMapper;
 import ru.practicum.ewm.service.model.Category;
 import ru.practicum.ewm.service.model.Event;
 import ru.practicum.ewm.service.model.EventSort;
-import ru.practicum.ewm.service.model.NotFound;
+import ru.practicum.stats.dto.NotFound;
 import ru.practicum.ewm.service.model.User;
 import ru.practicum.ewm.service.repository.EventRepository;
 import ru.practicum.ewm.service.repository.ParticipationRequestRepository;
@@ -52,9 +52,6 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> getEventsPrivate(Long userId, int from, int size) {
         log.info("Получаем события пользователя {}, from {}, size {}", userId, from, size);
-
-        validationService.checkUserExists(userId);
-
         int pageNumber = from / size;
         Pageable pageable = PageRequest.of(pageNumber, size);
         List<Event> events = eventRepository.findAllByInitiatorId(userId, pageable).getContent();
@@ -95,7 +92,6 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventFullDto getEventByIdPrivate(Long userId, Long eventId) {
         log.info("Получаем событие id {} пользователя id {}", eventId, userId);
-        validationService.checkUserExists(userId);
         Event event = getEventOrThrow(
             eventRepository.findByIdAndInitiatorId(eventId, userId), eventId);
         Long views = getViewStatsForEvents(List.of(event))
@@ -111,9 +107,6 @@ public class EventServiceImpl implements EventService {
         if (updateRequest.hasParticipantLimit() && updateRequest.getParticipantLimit() < 0) {
             throw new ValidationException("Число участников не может быть меньше 0");
         }
-
-        validationService.checkUserExists(userId);
-
         Event event = getEventOrThrow(
             eventRepository.findByIdAndInitiatorId(eventId, userId), eventId);
 
@@ -153,8 +146,6 @@ public class EventServiceImpl implements EventService {
         log.info("Получаем события, фильтры: text={}, categories={}, paid={}, rangeStart={}, rangeEnd={}, " +
                 "onlyAvailable={}, sort={}, from={}, size={}",
             text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from, size);
-
-        validationService.validateDateForSearch(rangeStart, rangeEnd);
 
         if (rangeStart == null && rangeEnd == null) {
             rangeStart = LocalDateTime.now();
@@ -209,7 +200,7 @@ public class EventServiceImpl implements EventService {
         saveHit("/events/" + eventId, ip);
 
         Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event.getId()));
-        Map<Long, Long> views = getViewsForEvents(List.of(event.getId()));
+        Map<Long, Long> views = getViewsForEvents(event.getId());
         views.put(eventId, views.getOrDefault(eventId, 0L) + 1);
 
         log.info("Confirmed requests: {}, Views: {}", confirmedRequests.get(event.getId()), views.getOrDefault(event.getId(), 0L));
@@ -223,7 +214,7 @@ public class EventServiceImpl implements EventService {
 
     private EventFullDto buildFullDto(Event event) {
         Map<Long, Long> confirmedRequests = getConfirmedRequests(List.of(event.getId()));
-        Map<Long, Long> views = getViewsForEvents(List.of(event.getId()));
+        Map<Long, Long> views = getViewsForEvents(event.getId());
 
         return EventMapper.toEventFullDto(
             event,
@@ -232,31 +223,26 @@ public class EventServiceImpl implements EventService {
         );
     }
 
-    private Map<Long, Long> getViewsForEvents(List<Long> eventIds) {
-        if (eventIds.isEmpty()) return Map.of();
+    private Map<Long, Long> getViewsForEvents(Long eventId) {
+        if (eventId == null) {
+            return Map.of();
+        }
 
-        List<String> uris = eventIds.stream()
-            .map(id -> "/events/" + id)
-            .toList();
-
-        Event event = eventRepository.findById(eventIds.get(0))
-            .orElseThrow(() -> new NotFoundException("Событие c id " + eventIds.get(0) + " не найдено"));
+        String uri = "/events/" + eventId;
+        Event event = eventRepository.findById(eventId)
+            .orElseThrow(() -> new NotFoundException("Событие c id " + eventId + " не найдено"));
 
         LocalDateTime start = event.getPublishedOn() != null ? event.getPublishedOn() : event.getCreatedOn();
         LocalDateTime end = LocalDateTime.now();
 
-        List<ViewStatsDto> stats = statsClient.getStats(start, end, uris, true);
-
-        Map<Long, Long> views = eventIds.stream()
-            .collect(Collectors.toMap(id -> id, id -> 0L));
-
+        List<ViewStatsDto> stats = statsClient.getStats(start, end, List.of(uri), true);
+        Map<Long, Long> views = Map.of(eventId, 0L);
         if (stats != null && !stats.isEmpty()) {
-            stats.forEach(stat -> {
-                Long eventId = getEventIdFromUri(stat.getUri());
-                if (eventId > -1L) {
-                    views.put(eventId, stat.getHits());
-                }
-            });
+            ViewStatsDto stat = stats.getFirst();
+            Long viewEventId = getEventIdFromUri(stat.getUri());
+            if (viewEventId > -1L) {
+                views = Map.of(eventId, stat.getHits());
+            }
         }
         return views;
     }

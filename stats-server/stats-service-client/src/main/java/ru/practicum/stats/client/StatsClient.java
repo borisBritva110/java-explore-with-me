@@ -1,7 +1,5 @@
 package ru.practicum.stats.client;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -9,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+
+import lombok.extern.slf4j.Slf4j;
 import ru.practicum.stats.dto.EndpointHitDto;
 import ru.practicum.stats.dto.ViewStatsDto;
 
@@ -17,12 +17,11 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
-
+@Slf4j
 @Component
 public class StatsClient {
-    private static final Logger log = LoggerFactory.getLogger(StatsClient.class);
-
-    @Value("${stats-server.url:http://stats-server:9090}")    private String url;
+    @Value("${stats-server.url:https://stats-server:9090}")
+    private String url;
     private final RestTemplate restTemplate;
     private final DateTimeFormatter formatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
@@ -30,18 +29,18 @@ public class StatsClient {
         this.restTemplate = new RestTemplate();
     }
 
-    public ResponseEntity<Object> saveHit(EndpointHitDto endpointHitDto) {
+    public void saveHit(EndpointHitDto endpointHitDto) {
         log.info("Вызываем метод saveHit из clientService {}", endpointHitDto);
             try {
                 ResponseEntity<Object> response = restTemplate.postForEntity(url.concat("/hit"),
                     endpointHitDto, Object.class);
-                return ResponseEntity.status(response.getStatusCode()).body(response.hasBody() ? response.getBody() : null);
+                ResponseEntity.status(response.getStatusCode()).body(response.hasBody() ? response.getBody() : null);
             } catch (HttpStatusCodeException e) {
                 log.warn("HttpStatusCodeException method saveHit {}", e.getMessage());
-                return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
+                ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
             } catch (Exception e) {
                 log.warn("Exception method saveHit {}", e.getMessage());
-                return ResponseEntity.status(500).body(null);
+                ResponseEntity.status(500).body(null);
             }
         }
 
@@ -64,7 +63,7 @@ public class StatsClient {
                 urlResult.toString(),
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<ViewStatsDto>>() {
+                new ParameterizedTypeReference<>() {
                 }
             );
             return response.getBody() != null ? response.getBody() : Collections.emptyList();

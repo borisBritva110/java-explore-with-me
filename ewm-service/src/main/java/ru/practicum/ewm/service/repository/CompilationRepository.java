@@ -11,9 +11,6 @@ import ru.practicum.ewm.service.model.Compilation;
 import java.util.Optional;
 
 public interface CompilationRepository extends JpaRepository<Compilation, Long> {
-
-    boolean existsByTitle(String title);
-
     @EntityGraph(attributePaths = {"events"})
     Optional<Compilation> findById(Long id);
 

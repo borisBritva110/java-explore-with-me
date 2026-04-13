@@ -1,4 +1,4 @@
-package ru.practicum.ewm.service.model;
+package ru.practicum.stats.dto;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

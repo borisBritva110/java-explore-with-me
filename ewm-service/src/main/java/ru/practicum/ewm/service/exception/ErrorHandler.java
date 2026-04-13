@@ -22,7 +22,6 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleValidationException(final ValidationException e) {
-        log.error("Ошибка валидации: {}", e.getMessage());
         return ApiError.builder()
                 .errors(List.of(e.getMessage()))
                 .message("Incorrectly made request.")
@@ -35,7 +34,6 @@ public class ErrorHandler {
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ApiError handleMethodArgumentNotValidException(final MethodArgumentNotValidException e) {
-        log.error("Ошибка валидации: {}", e.getMessage());
         List<String> errors = e.getBindingResult().getFieldErrors().stream()
                 .map(error -> String.format("Field: %s. Error: %s. Value: %s",
                         error.getField(), error.getDefaultMessage(), error.getRejectedValue()))

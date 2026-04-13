@@ -14,7 +14,7 @@ import ru.practicum.ewm.service.dto.NewCategoryDto;
 import ru.practicum.ewm.service.exception.NotFoundException;
 import ru.practicum.ewm.service.mapper.CategoryMapper;
 import ru.practicum.ewm.service.model.Category;
-import ru.practicum.ewm.service.model.NotFound;
+import ru.practicum.stats.dto.NotFound;
 import ru.practicum.ewm.service.repository.CategoryRepository;
 import ru.practicum.ewm.service.service.CategoryService;
 
@@ -33,7 +33,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public CategoryDto addCategory(NewCategoryDto newCategoryDto) {
         log.info("Добавляем новую категорию: {}", newCategoryDto);
-        validationService.checkCategoryNameUse(newCategoryDto.getName(), null);
         Category newCategory = categoryRepository.save(CategoryMapper.toCategory(newCategoryDto));
         log.info("Новая категория добавлена: {}", newCategory);
         return CategoryMapper.toCategoryDto(newCategory);
@@ -45,7 +44,6 @@ public class CategoryServiceImpl implements CategoryService {
         log.info("Обновляем категорию id {}: {}", catId, categoryDto);
         Category category = getCategoryOrThrow(catId);
         log.info("old name: {}", category.getName());
-        validationService.checkCategoryNameUse(categoryDto.getName(), catId);
         category.setName(categoryDto.getName());
         Category updatedCategory = categoryRepository.save(category);
         log.info("Категория id {} обновлена", catId);
@@ -56,7 +54,6 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional
     public void deleteCategory(Long catId) {
         log.info("Удаляем категорию id {}", catId);
-        validationService.validateCategoryDeletion(catId);
         categoryRepository.deleteById(catId);
         log.info("Категория id {} удалена", catId);
     }
