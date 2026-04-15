@@ -12,8 +12,11 @@ import ru.practicum.ewm.service.dto.*;
 import ru.practicum.ewm.service.exception.NotFoundException;
 import ru.practicum.ewm.service.mapper.EventMapper;
 import ru.practicum.ewm.service.model.Category;
+import ru.practicum.ewm.service.model.Comment;
+import ru.practicum.ewm.service.model.CommentStatus;
 import ru.practicum.ewm.service.model.Event;
 import ru.practicum.ewm.service.model.EventSort;
+import ru.practicum.ewm.service.repository.CommentRepository;
 import ru.practicum.stats.dto.NotFound;
 import ru.practicum.ewm.service.model.User;
 import ru.practicum.ewm.service.repository.EventRepository;
@@ -48,6 +51,7 @@ public class EventServiceImpl implements EventService {
     private final StatsClient statsClient;
     private final ValidationServiceImpl validationService;
     private final ParticipationRequestRepository participationRequestRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public List<EventShortDto> getEventsPrivate(Long userId, int from, int size) {
@@ -61,12 +65,17 @@ public class EventServiceImpl implements EventService {
         }
 
         Map<Long, Long> viewsMap = getViewStatsForEvents(events);
+        Map<Long, Long> commentsCountMap = getCommentsCountForEvents(events.stream()
+            .map(Event::getId)
+            .collect(Collectors.toList()));
+
         log.info("(пользователь) Получили для объединения события: {}\n и карту просмотров: {}", events, viewsMap);
         return events.stream()
             .map(event ->
                 EventMapper.toEventShortDto(
-                    event, viewsMap
-                        .getOrDefault(event.getId(), EventMapper.NO_VIEWS)))
+                    event,
+                    viewsMap.getOrDefault(event.getId(), EventMapper.NO_VIEWS),
+                    commentsCountMap.getOrDefault(event.getId(), 0L)))
             .collect(Collectors.toList());
     }
 
@@ -432,5 +441,25 @@ public class EventServiceImpl implements EventService {
         endpointHitDto.setUri(path);
         endpointHitDto.setTimestamp(LocalDateTime.now());
         statsClient.saveHit(endpointHitDto);
+    }
+
+    private Map<Long, Long> getCommentsCountForEvents(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        List<Comment> comments = commentRepository.findByEventIdInAndStatusEquals(eventIds, CommentStatus.PUBLISHED);
+        Map<Long, Long> commentsCountMap = new HashMap<>();
+
+        for (Long eventId : eventIds) {
+            commentsCountMap.put(eventId, 0L);
+        }
+
+        for (Comment comment : comments) {
+            Long eventId = comment.getEvent().getId();
+            commentsCountMap.put(eventId, commentsCountMap.getOrDefault(eventId, 0L) + 1);
+        }
+
+        return commentsCountMap;
     }
 }
