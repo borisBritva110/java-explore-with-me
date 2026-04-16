@@ -18,12 +18,12 @@ public class CommentDto {
     private String text;
     private Long eventId;
     private UserShortDto author;
-    
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdOn;
-    
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updatedOn;
-    
+
     private CommentStatus status;
 }

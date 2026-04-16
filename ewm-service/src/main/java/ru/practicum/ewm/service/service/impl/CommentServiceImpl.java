@@ -29,53 +29,53 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class CommentServiceImpl implements CommentService {
-    
+
     private final CommentRepository commentRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final CommentMapper commentMapper;
-    
+
     @Override
     @Transactional
     public CommentDto createComment(Long userId, Long eventId, NewCommentDto dto) {
         User author = getUserById(userId);
         Event event = getEventById(eventId);
-        
+
         Comment comment = commentMapper.toEntity(dto, event, author);
         Comment savedComment = commentRepository.save(comment);
-        
+
         return commentMapper.toDto(savedComment);
     }
-    
+
     @Override
     @Transactional
     public CommentDto updateComment(Long userId, Long commentId, UpdateCommentRequest dto) {
         Comment comment = getCommentByIdAndAuthor(commentId, userId);
-        
+
         if (comment.getStatus() == CommentStatus.PUBLISHED) {
             throw new ConflictException("Нельзя редактировать опубликованный комментарий");
         }
-        
+
         comment.setText(dto.getText());
         Comment updatedComment = commentRepository.save(comment);
-        
+
         return commentMapper.toDto(updatedComment);
     }
-    
+
     @Override
     @Transactional
     public void deleteComment(Long userId, Long commentId) {
         Comment comment = getCommentByIdAndAuthor(commentId, userId);
         commentRepository.delete(comment);
     }
-    
+
     @Override
     public CommentDto getCommentById(Long commentId) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Комментарий не найден"));
         return commentMapper.toDto(comment);
     }
-    
+
     @Override
     public Page<CommentDto> getCommentsByEvent(Long eventId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("createdOn").descending());
@@ -84,7 +84,7 @@ public class CommentServiceImpl implements CommentService {
         
         return comments.map(commentMapper::toDto);
     }
-    
+
     @Override
     public Page<CommentDto> getCommentsByAuthor(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("createdOn").descending());
@@ -92,7 +92,7 @@ public class CommentServiceImpl implements CommentService {
         
         return comments.map(commentMapper::toDto);
     }
-    
+
     @Override
     @Transactional
     public CommentDto moderateComment(Long commentId, CommentStatus status) {
@@ -104,7 +104,7 @@ public class CommentServiceImpl implements CommentService {
         
         return commentMapper.toDto(updatedComment);
     }
-    
+
     @Override
     public Page<CommentDto> getCommentsForModeration(String text, CommentStatus status, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
@@ -112,7 +112,7 @@ public class CommentServiceImpl implements CommentService {
         
         return comments.map(commentMapper::toDto);
     }
-    
+
     @Override
     public List<CommentDto> getCommentsByEventIds(List<Long> eventIds) {
         List<Comment> comments = commentRepository.findByEventIdInAndStatusEquals(eventIds, CommentStatus.PUBLISHED);
@@ -121,17 +121,17 @@ public class CommentServiceImpl implements CommentService {
                 .map(commentMapper::toDto)
                 .collect(Collectors.toList());
     }
-    
+
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("Пользователь не найден"));
     }
-    
+
     private Event getEventById(Long eventId) {
         return eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие не найдено"));
     }
-    
+
     private Comment getCommentByIdAndAuthor(Long commentId, Long authorId) {
         return commentRepository.findByIdAndAuthorId(commentId, authorId)
                 .orElseThrow(() -> new NotFoundException("Комментарий не найден или вы не являетесь его автором"));

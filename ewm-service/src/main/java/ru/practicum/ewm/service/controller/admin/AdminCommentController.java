@@ -23,7 +23,7 @@ public class AdminCommentController {
             @RequestParam(defaultValue = "PENDING") CommentStatus status,
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size) {
-        
+
         log.info("Получение комментариев для модерации: text={}, status={}, from={}, size={}", text, status, from, size);
         Page<CommentDto> comments = commentService.getCommentsForModeration(text, status, from, size);
         return ResponseEntity.ok(comments);

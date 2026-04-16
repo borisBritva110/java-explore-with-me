@@ -21,7 +21,7 @@ public class PublicCommentController {
             @PathVariable Long eventId,
             @RequestParam(defaultValue = "0") Integer from,
             @RequestParam(defaultValue = "10") Integer size) {
-        
+
         log.info("Получение комментариев к событию с id={}, from={}, size={}", eventId, from, size);
         Page<CommentDto> comments = commentService.getCommentsByEvent(eventId, from, size);
         return ResponseEntity.ok(comments);
