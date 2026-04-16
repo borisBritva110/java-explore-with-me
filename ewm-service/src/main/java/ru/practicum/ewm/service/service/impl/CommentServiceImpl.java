@@ -81,7 +81,7 @@ public class CommentServiceImpl implements CommentService {
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("createdOn").descending());
         Page<Comment> comments = commentRepository.findByEventIdAndStatusOrderByCreatedOnDesc(
                 eventId, CommentStatus.PUBLISHED, pageable);
-        
+
         return comments.map(commentMapper::toDto);
     }
 
@@ -89,7 +89,7 @@ public class CommentServiceImpl implements CommentService {
     public Page<CommentDto> getCommentsByAuthor(Long userId, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size, Sort.by("createdOn").descending());
         Page<Comment> comments = commentRepository.findByAuthorIdOrderByCreatedOnDesc(userId, pageable);
-        
+
         return comments.map(commentMapper::toDto);
     }
 
@@ -98,10 +98,10 @@ public class CommentServiceImpl implements CommentService {
     public CommentDto moderateComment(Long commentId, CommentStatus status) {
         Comment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new NotFoundException("Комментарий не найден"));
-        
+
         comment.setStatus(status);
         Comment updatedComment = commentRepository.save(comment);
-        
+
         return commentMapper.toDto(updatedComment);
     }
 
@@ -109,14 +109,14 @@ public class CommentServiceImpl implements CommentService {
     public Page<CommentDto> getCommentsForModeration(String text, CommentStatus status, Integer from, Integer size) {
         Pageable pageable = PageRequest.of(from / size, size);
         Page<Comment> comments = commentRepository.findByTextAndStatus(text, status, pageable);
-        
+
         return comments.map(commentMapper::toDto);
     }
 
     @Override
     public List<CommentDto> getCommentsByEventIds(List<Long> eventIds) {
         List<Comment> comments = commentRepository.findByEventIdInAndStatusEquals(eventIds, CommentStatus.PUBLISHED);
-        
+
         return comments.stream()
                 .map(commentMapper::toDto)
                 .collect(Collectors.toList());

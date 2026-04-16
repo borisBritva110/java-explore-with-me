@@ -10,7 +10,6 @@ import ru.practicum.ewm.service.model.User;
 
 @Component
 public class CommentMapper {
-    
     public Comment toEntity(NewCommentDto dto, Event event, User author) {
         return Comment.builder()
                 .text(dto.getText())
@@ -19,7 +18,7 @@ public class CommentMapper {
                 .status(CommentStatus.PENDING)
                 .build();
     }
-    
+
     public CommentDto toDto(Comment comment) {
         return CommentDto.builder()
                 .id(comment.getId())
