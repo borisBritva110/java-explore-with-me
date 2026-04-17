@@ -26,4 +26,10 @@ public interface CommentRepository extends JpaRepository<Comment, Long> {
     List<Comment> findByEventIdInAndStatusEquals(List<Long> eventIds, CommentStatus status);
 
     Optional<Comment> findByIdAndAuthorId(Long commentId, Long authorId);
+
+    @Query("SELECT NEW ru.practicum.ewm.service.repository.EventCommentCount(c.event.id, COUNT(c)) " +
+           "FROM Comment c " +
+           "WHERE c.event.id IN :eventIds AND c.status = :status " +
+           "GROUP BY c.event.id")
+    List<EventCommentCount> countCommentsByEventIds(@Param("eventIds") List<Long> eventIds, @Param("status") CommentStatus status);
 }
