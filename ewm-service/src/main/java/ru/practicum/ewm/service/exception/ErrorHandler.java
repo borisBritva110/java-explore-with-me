@@ -2,6 +2,7 @@ package ru.practicum.ewm.service.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -118,5 +119,18 @@ public class ErrorHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR.name())
                 .timestamp(LocalDateTime.now())
                 .build();
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ApiError handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        log.warn("Отсутствует тело запроса или неверный формат JSON: {}", e.getMessage());
+        return ApiError.builder()
+            .errors(List.of("Request body is missing or invalid"))
+            .message("Required request body is missing")
+            .reason("The request body is missing or incorrectly formatted")
+            .status(HttpStatus.BAD_REQUEST.name())
+            .timestamp(LocalDateTime.now())
+            .build();
     }
 }

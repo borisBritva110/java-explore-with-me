@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
@@ -39,4 +40,5 @@ public class EventFullDto {
     private String state;
     private String title;
     private Long views;
+    private List<CommentDto> comments;
 }

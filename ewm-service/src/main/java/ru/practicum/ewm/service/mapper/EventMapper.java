@@ -9,6 +9,7 @@ import ru.practicum.ewm.service.model.Event;
 import ru.practicum.ewm.service.model.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class EventMapper {
@@ -52,6 +53,21 @@ public final class EventMapper {
             .build();
     }
 
+    public static EventShortDto toEventShortDto(Event event, Long views, Long commentsCount) {
+        return EventShortDto.builder()
+            .id(event.getId())
+            .annotation(event.getAnnotation())
+            .category(CategoryMapper.toCategoryDto(event.getCategory()))
+            .confirmedRequests(event.getConfirmedRequests())
+            .eventDate(event.getEventDate())
+            .initiator(UserMapper.toShortDto(event.getInitiator()))
+            .paid(event.getPaid())
+            .title(event.getTitle())
+            .views(views)
+            .commentsCount(commentsCount)
+            .build();
+    }
+
     public static EventFullDto toEventFullDto(Event event, Long confirmedRequests, Long views) {
         return EventFullDto.builder()
             .id(event.getId())
@@ -70,6 +86,28 @@ public final class EventMapper {
             .state(event.getState().name())
             .title(event.getTitle())
             .views(views)
+            .build();
+    }
+
+    public static EventFullDto toEventFullDto(Event event, Long confirmedRequests, Long views, List<CommentDto> comments) {
+        return EventFullDto.builder()
+            .id(event.getId())
+            .annotation(event.getAnnotation())
+            .category(CategoryMapper.toCategoryDto(event.getCategory()))
+            .confirmedRequests(confirmedRequests)
+            .createdOn(event.getCreatedOn())
+            .description(event.getDescription())
+            .eventDate(event.getEventDate())
+            .initiator(UserMapper.toShortDto(event.getInitiator()))
+            .location(LocationMapper.toLocationDto(event.getLocation()))
+            .paid(event.getPaid())
+            .participantLimit(event.getParticipantLimit())
+            .publishedOn(event.getPublishedOn())
+            .requestModeration(event.getRequestModeration())
+            .state(event.getState().name())
+            .title(event.getTitle())
+            .views(views)
+            .comments(comments)
             .build();
     }
 

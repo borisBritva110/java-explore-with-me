@@ -10,10 +10,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.ewm.service.dto.*;
 import ru.practicum.ewm.service.exception.NotFoundException;
+import ru.practicum.ewm.service.mapper.CommentMapper;
 import ru.practicum.ewm.service.mapper.EventMapper;
 import ru.practicum.ewm.service.model.Category;
+import ru.practicum.ewm.service.model.Comment;
+import ru.practicum.ewm.service.model.CommentStatus;
 import ru.practicum.ewm.service.model.Event;
 import ru.practicum.ewm.service.model.EventSort;
+import ru.practicum.ewm.service.repository.CommentRepository;
+import ru.practicum.ewm.service.repository.EventCommentCount;
 import ru.practicum.stats.dto.NotFound;
 import ru.practicum.ewm.service.model.User;
 import ru.practicum.ewm.service.repository.EventRepository;
@@ -48,6 +53,8 @@ public class EventServiceImpl implements EventService {
     private final StatsClient statsClient;
     private final ValidationServiceImpl validationService;
     private final ParticipationRequestRepository participationRequestRepository;
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
 
     @Override
     public List<EventShortDto> getEventsPrivate(Long userId, int from, int size) {
@@ -61,12 +68,17 @@ public class EventServiceImpl implements EventService {
         }
 
         Map<Long, Long> viewsMap = getViewStatsForEvents(events);
+        Map<Long, Long> commentsCountMap = getCommentsCountForEvents(events.stream()
+            .map(Event::getId)
+            .collect(Collectors.toList()));
+
         log.info("(пользователь) Получили для объединения события: {}\n и карту просмотров: {}", events, viewsMap);
         return events.stream()
             .map(event ->
                 EventMapper.toEventShortDto(
-                    event, viewsMap
-                        .getOrDefault(event.getId(), EventMapper.NO_VIEWS)))
+                    event,
+                    viewsMap.getOrDefault(event.getId(), EventMapper.NO_VIEWS),
+                    commentsCountMap.getOrDefault(event.getId(), 0L)))
             .collect(Collectors.toList());
     }
 
@@ -210,10 +222,16 @@ public class EventServiceImpl implements EventService {
         Long currentViews = views.getOrDefault(eventId, 0L) + 1;
         views.put(eventId, currentViews);
 
+        List<Comment> comments = commentRepository.findByEventIdAndStatusOrderByCreatedOnDesc(eventId, CommentStatus.PUBLISHED, PageRequest.of(0, 100)).getContent();
+        List<CommentDto> commentDtos = comments.stream()
+            .map(commentMapper::toDto)
+            .collect(Collectors.toList());
+
         return EventMapper.toEventFullDto(
             event,
             confirmedRequests.get(event.getId()),
-            currentViews
+            currentViews,
+            commentDtos
         );
     }
 
@@ -432,5 +450,24 @@ public class EventServiceImpl implements EventService {
         endpointHitDto.setUri(path);
         endpointHitDto.setTimestamp(LocalDateTime.now());
         statsClient.saveHit(endpointHitDto);
+    }
+
+    private Map<Long, Long> getCommentsCountForEvents(List<Long> eventIds) {
+        if (eventIds == null || eventIds.isEmpty()) {
+            return new HashMap<>();
+        }
+
+        List<EventCommentCount> commentCounts = commentRepository.countCommentsByEventIds(eventIds, CommentStatus.PUBLISHED);
+        Map<Long, Long> commentsCountMap = new HashMap<>();
+
+        for (Long eventId : eventIds) {
+            commentsCountMap.put(eventId, 0L);
+        }
+
+        for (EventCommentCount count : commentCounts) {
+            commentsCountMap.put(count.getEventId(), count.getCommentCount());
+        }
+
+        return commentsCountMap;
     }
 }
